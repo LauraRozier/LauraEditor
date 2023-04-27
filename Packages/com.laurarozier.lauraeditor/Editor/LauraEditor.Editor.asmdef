@@ -1,0 +1,24 @@
+{
+    "name": "LauraEditor.Editor",
+    "references": [
+        "GUID:49818357e697641afb75d2f8acaf1861",
+        "GUID:bc2bc98148605964daa82979597f5765"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "Unity",
+            "expression": "1.0.0",
+            "define": "LAURA_EDITOR_EDITOR_1_0_0_OR_NEWER"
+        }
+    ],
+    "noEngineReferences": false
+}

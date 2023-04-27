@@ -1,0 +1,19 @@
+{
+    "name": "LauraEditor.Runtime",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "Unity",
+            "expression": "1.0.0",
+            "define": "LAURA_EDITOR_RUNTIME_1_0_0_OR_NEWER"
+        }
+    ],
+    "noEngineReferences": false
+}
