@@ -446,6 +446,9 @@ namespace LauraEditor.Editor.Hierarchy
 
         static void DrawComponentIconsToGUI(Component componentType, Rect selectionRect, ref List<string> addedTypes)
         {
+            if (componentType == null)
+                return;
+
             #region AR Icons
             if (componentType is WorldAnchor)
             {
