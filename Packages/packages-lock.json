@@ -32,7 +32,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.11",
+      "version": "2.0.18",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -41,8 +41,15 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.vscode": {
-      "version": "1.2.4",
+      "version": "1.2.5",
       "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "2.0.2",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -94,6 +101,22 @@
         "com.unity.modules.ui": "1.0.0",
         "com.unity.modules.imgui": "1.0.0"
       }
+    },
+    "com.varneon.package-exporter": {
+      "version": "https://github.com/Varneon/Unitypackage-Exporter.git?path=/Packages/com.varneon.package-exporter",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "b35ab82bd0810511dcabf9cf3fe8246a9510665c"
+    },
+    "com.varneon.upm-package-generator": {
+      "version": "https://github.com/Varneon/UPM-Package-Generator.git?path=/Packages/com.varneon.upm-package-generator",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "2.0.2"
+      },
+      "hash": "681693b1ebf995f6d6f7e9bfdfda41e316623bbf"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

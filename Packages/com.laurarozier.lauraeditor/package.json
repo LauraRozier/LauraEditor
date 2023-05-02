@@ -1,22 +1,23 @@
 {
-    "name": "com.laurarozier.lauraeditor",
-    "version": "1.0.0",
-    "description": "Editor modifications be LauraRozier, to make life easier",
-    "displayName": "LauraEditor",
-    "unity": "2019.4",
-    "author": {
-        "name": "LauraRozier",
-        "email": "thibmorozier@gmail.com",
-        "url": "https://github.com/thibmo"
-    },
-    "dependencies": {
-        "com.unity.settings-manager": "1.0.3"
-    },
-    "keywords": [
-        "laurarozier",
-        "editor",
-        "hierarchy",
-        "separator",
-        "customization"
-    ]
+  "name": "com.laurarozier.lauraeditor",
+  "version": "1.0.1",
+  "description": "Editor modifications be LauraRozier, to make life easier",
+  "displayName": "LauraEditor",
+  "unity": "2019.4",
+  "author": {
+    "name": "LauraRozier",
+    "email": "thibmorozier@gmail.com",
+    "url": "https://github.com/thibmo"
+  },
+  "dependencies": {
+    "com.unity.settings-manager": "1.0.3"
+  },
+  "keywords": [
+    "laurarozier",
+    "editor",
+    "hierarchy",
+    "separator",
+    "customization"
+  ],
+  "type": "tool"
 }
