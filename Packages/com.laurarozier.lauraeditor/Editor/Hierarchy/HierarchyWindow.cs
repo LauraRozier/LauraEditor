@@ -96,9 +96,9 @@ namespace LauraEditor.Editor.Hierarchy
 
         #region Icon Textures
         // Custom Icons
-        private static Texture texBtnOff;
-        private static Texture texBtnOn;
-        private static Texture texStatic;
+        private static Texture texBtnOff = null;
+        private static Texture texBtnOn = null;
+        private static Texture texStatic = null;
         // Look here for more icons: https://github.com/halak/unity-editor-icons
         // Script Icons
         private static readonly Texture texScript = EditorGUIUtility.IconContent("cs Script Icon").image;
@@ -233,13 +233,6 @@ namespace LauraEditor.Editor.Hierarchy
                 RetrieveDataFromScene();
             }
 
-            texBtnOff = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/BtnOff.png");
-            texBtnOn = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/BtnOn.png");
-            texStatic = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/IconPin.png");
-
-            if (texBtnOff == null || texBtnOn == null || texStatic == null)
-                throw new Exception("Unable to load textures");
-
             EditorApplication.RepaintHierarchyWindow();
         }
         #endregion Initialization
@@ -333,6 +326,15 @@ namespace LauraEditor.Editor.Hierarchy
             //skips early if item is not registered or not valid
             if (!sceneGameObjects.ContainsKey(instanceID)) return;
 
+            if (texBtnOff == null)
+                texBtnOff = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/BtnOff.png");
+
+            if (texBtnOn == null)
+                texBtnOn = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/BtnOn.png");
+
+            if (texStatic == null)
+                texStatic = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/IconPin.png");
+
             currentItem = sceneGameObjects[instanceID];
             temp_iconsDrawedCount = 0;
 
@@ -399,7 +401,7 @@ namespace LauraEditor.Editor.Hierarchy
             #endregion
 
             #region Draw Activation Toggle
-            if (Config.HierarchyConfig.DrawActivationToggle)
+            if (Config.HierarchyConfig.DrawActivationToggle && texBtnOff != null && texBtnOn != null)
             {
                 var btnContent = new GUIContent(go.activeSelf ? texBtnOn : texBtnOff, "GameObject Active");
 
@@ -425,7 +427,7 @@ namespace LauraEditor.Editor.Hierarchy
             if (hasScript && monoScript.GetType().FullName == "LauraEditor.Runtime.Separator.SeparatorHeader")
                 return;
 
-            if (go.isStatic)
+            if (go.isStatic && texStatic != null)
                 GUI.DrawTexture(
                     new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                     texStatic
