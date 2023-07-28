@@ -36,9 +36,8 @@ namespace LauraEditor.Editor
 
         internal static Settings Instance
         {
-            get
-            {
-                if (s_Instance == null)
+            get {
+                if (null == s_Instance)
                     s_Instance = new Settings(k_PackageName);
 
                 return s_Instance;
@@ -64,14 +63,12 @@ namespace LauraEditor.Editor
         [UserSettingBlock("Separator")]
         public static void SeparatorSettingsGUI(string searchContext)
         {
-            using (var scope = new EditorGUI.ChangeCheckScope())
-            {
+            using (var scope = new EditorGUI.ChangeCheckScope()) {
                 SepConfig.MaxLength.value = SettingsGUILayout.SettingsSlider("Max Length", SepConfig.MaxLength, 10, 60, searchContext);
                 SepConfig.FillType.value = (SepType)EditorGUILayout.EnumPopup("Type", SepConfig.FillType.value);
                 SettingsGUILayout.DoResetContextMenuForLastRect(SepConfig.FillType);
 
-                if (SepConfig.FillType.value == SepType.Custom)
-                {
+                if (SepConfig.FillType.value == SepType.Custom) {
                     string v = SettingsGUILayout.SettingsTextField("Custom Fill", SepConfig.CustomFill, searchContext);
 
                     if (v?.Length <= 1)
@@ -84,8 +81,7 @@ namespace LauraEditor.Editor
                 if (SepConfig.Alignment.value == SepAlignment.Start || SepConfig.Alignment.value == SepAlignment.End)
                     SepConfig.MinFillLength.value = SettingsGUILayout.SettingsSlider("Min Fill Length", SepConfig.MinFillLength, 0, 10, searchContext);
 
-                if (scope.changed)
-                {
+                if (scope.changed) {
                     Instance.Save();
                     Separator.Editor.UpdateAll();
                 }
@@ -100,18 +96,15 @@ namespace LauraEditor.Editor
         [UserSettingBlock("Hierarchy")]
         public static void HierarchySettingsGUI(string searchContext)
         {
-            using (var scope = new EditorGUI.ChangeCheckScope())
-            {
+            using (var scope = new EditorGUI.ChangeCheckScope()) {
                 HierarchyConfig.Enabled.value = SettingsGUILayout.SettingsToggle("Enabled", HierarchyConfig.Enabled, searchContext);
                 HierarchyConfig.UpdateInPlayMode.value = SettingsGUILayout.SettingsToggle("Update In Play Mode", HierarchyConfig.UpdateInPlayMode, searchContext);
                 HierarchyConfig.DrawActivationToggle.value = SettingsGUILayout.SettingsToggle("Draw Activation Toggle", HierarchyConfig.DrawActivationToggle, searchContext);
 
                 showAltBg = EditorGUILayout.Foldout(showAltBg, "Alternating Background Settings");
 
-                if (showAltBg)
-                {
-                    using (var group = new SettingsGUILayout.IndentedGroup())
-                    {
+                if (showAltBg) {
+                    using (var group = new SettingsGUILayout.IndentedGroup()) {
                         HierarchyConfig.AlternateBackground.value = SettingsGUILayout.SettingsToggle("Enabled", HierarchyConfig.AlternateBackground, searchContext);
                         HierarchyConfig.AlternateBackgroundColor.value = SettingsGUILayout.SettingsColorField("Color", HierarchyConfig.AlternateBackgroundColor, searchContext);
                     }
@@ -119,18 +112,15 @@ namespace LauraEditor.Editor
 
                 showTree = EditorGUILayout.Foldout(showTree, "Tree Settings");
 
-                if (showTree)
-                {
-                    using (var group = new SettingsGUILayout.IndentedGroup())
-                    {
+                if (showTree) {
+                    using (var group = new SettingsGUILayout.IndentedGroup()) {
                         HierarchyConfig.TreeEnabled.value = SettingsGUILayout.SettingsToggle("Enabled", HierarchyConfig.TreeEnabled, searchContext);
                         HierarchyConfig.TreeDividerHeigth.value = SettingsGUILayout.SettingsSlider("Divider Heigth", HierarchyConfig.TreeDividerHeigth, 0, 3, searchContext);
                         HierarchyConfig.TreeLineColor.value = SettingsGUILayout.SettingsColorField("Line Color", HierarchyConfig.TreeLineColor, searchContext);
                     }
                 }
 
-                if (scope.changed)
-                {
+                if (scope.changed) {
                     Instance.Save();
                     HierarchyWindow.Initialize();
                 }

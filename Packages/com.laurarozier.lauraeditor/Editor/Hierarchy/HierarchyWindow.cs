@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEngine.SceneManagement;
 using UnityEditor.Experimental.SceneManagement;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 using UnityEngine.Animations;
 using UnityEngine.XR.WSA;
 using UnityEngine.VFX;
@@ -15,6 +16,7 @@ using UnityEngine.Playables;
 using UnityEngine.Rendering;
 using UnityEngine.Tilemaps;
 using UnityEngine.Video;
+using System.Reflection;
 
 namespace LauraEditor.Editor.Hierarchy
 {
@@ -83,16 +85,21 @@ namespace LauraEditor.Editor.Hierarchy
             }
         }
 
+        struct AnimClipAndTime
+        {
+            public GameObject root;
+            public AnimationClip clip;
+            public float time;
+        }
+
         private static bool initialized = false;
         private static int firstInstanceID = 0;
         private static readonly Dictionary<int, InstanceInfo> sceneGameObjects = new Dictionary<int, InstanceInfo>();
         private static bool temp_alternatingDrawed;
         private static int temp_iconsDrawedCount;
         private static InstanceInfo currentItem;
-        private static readonly GUIStyle ImgBtnStyle = new GUIStyle()
-        {
-            imagePosition = ImagePosition.ImageOnly,
-        };
+        private static readonly GUIStyle ImgBtnStyle = new GUIStyle { imagePosition = ImagePosition.ImageOnly };
+        private static Type animationWindowType = null;
 
         #region Icon Textures
         // Custom Icons
@@ -100,6 +107,8 @@ namespace LauraEditor.Editor.Hierarchy
         private static Texture texBtnOn = null;
         private static Texture texStatic = null;
         // Look here for more icons: https://github.com/halak/unity-editor-icons
+        // Issue Icons
+        private static readonly Texture texErr = EditorGUIUtility.IconContent("console.erroricon").image;
         // Script Icons
         private static readonly Texture texScript = EditorGUIUtility.IconContent("cs Script Icon").image;
         // AR Icons
@@ -216,8 +225,7 @@ namespace LauraEditor.Editor.Hierarchy
         public static void Initialize()
         {
             // Unregisters previous events
-            if (initialized)
-            {
+            if (initialized) {
                 // Prevents registering events multiple times
                 EditorApplication.hierarchyWindowItemOnGUI -= HierarchyWindowItemOnGUI;
                 EditorApplication.hierarchyChanged -= RetrieveDataFromScene;
@@ -225,8 +233,7 @@ namespace LauraEditor.Editor.Hierarchy
 
             initialized = true;
 
-            if (Config.HierarchyConfig.Enabled)
-            {
+            if (Config.HierarchyConfig.Enabled) {
                 EditorApplication.hierarchyWindowItemOnGUI += HierarchyWindowItemOnGUI;
                 EditorApplication.hierarchyChanged += RetrieveDataFromScene;
 
@@ -246,11 +253,10 @@ namespace LauraEditor.Editor.Hierarchy
                 return;
 
             sceneGameObjects.Clear();
-            var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
 
-            if (prefabStage != null)
-            {
-                var prefabContentsRoot = PrefabStageUtility.GetCurrentPrefabStage().prefabContentsRoot;
+            if (null != prefabStage) {
+                GameObject prefabContentsRoot = PrefabStageUtility.GetCurrentPrefabStage().prefabContentsRoot;
                 AnalyzeGoWithChildren(prefabContentsRoot, -1, 0, true, new HLineType[0]);
                 firstInstanceID = prefabContentsRoot.GetInstanceID();
                 return;
@@ -260,12 +266,10 @@ namespace LauraEditor.Editor.Hierarchy
             Scene tempScene;
             firstInstanceID = -1;
 
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
+            for (int i = 0; i < SceneManager.sceneCount; i++) {
                 tempScene = SceneManager.GetSceneAt(i);
 
-                if (tempScene.isLoaded)
-                {
+                if (tempScene.isLoaded) {
                     sceneRoots = tempScene.GetRootGameObjects();
 
                     // Analyzes all scene's gameObjects
@@ -283,8 +287,7 @@ namespace LauraEditor.Editor.Hierarchy
             int instanceID = go.GetInstanceID();
             List<HLineType> newHLines;
 
-            if (!sceneGameObjects.ContainsKey(instanceID)) // Processes the gameobject only if it wasn't processed already
-            {
+            if (!sceneGameObjects.ContainsKey(instanceID)) { // Processes the gameobject only if it wasn't processed already
                 newHLines = new List<HLineType>(hLines);
 
                 if (newHLines.Count > 0 && newHLines[newHLines.Count - 1] == HLineType.Half)
@@ -292,8 +295,7 @@ namespace LauraEditor.Editor.Hierarchy
 
                 newHLines.Add(isLastChild ? HLineType.Half : HLineType.Full);
 
-                InstanceInfo newInfo = new InstanceInfo
-                {
+                InstanceInfo newInfo = new InstanceInfo {
                     NestingLevel = nestingLevel,
                     NestingGroup = nestingGroup,
                     HasChilds = go.transform.childCount > 0,
@@ -304,14 +306,14 @@ namespace LauraEditor.Editor.Hierarchy
 
                 // Adds element to the array
                 sceneGameObjects.Add(instanceID, newInfo);
-            }
-            else
+            } else {
                 newHLines = new List<HLineType>(sceneGameObjects[instanceID].HLines);
+            }
 
             // Analyzes Childrens
             int childCount = go.transform.childCount;
 
-            for (int j = 0; j < childCount; j++)
+            for (int j = 0; j < childCount; j++) {
                 AnalyzeGoWithChildren(
                     go.transform.GetChild(j).gameObject,
                     nestingLevel + 1,
@@ -319,36 +321,90 @@ namespace LauraEditor.Editor.Hierarchy
                     j == childCount - 1,
                     newHLines
                 );
+            }
+        }
+
+        static bool HasError(GameObject go)
+        {
+            if (GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(go) > 0)
+                return true;
+
+            return false;
+        }
+
+        static Type GetAnimationWindowType()
+        {
+            if (null == animationWindowType)
+                animationWindowType = Type.GetType("UnityEditor.AnimationWindow,UnityEditor");
+
+            return animationWindowType;
+        }
+
+        static UnityEngine.Object GetOpenAnimationWindow()
+        {
+            UnityEngine.Object[] openAnimationWindows = Resources.FindObjectsOfTypeAll(GetAnimationWindowType());
+
+            if (openAnimationWindows.Length > 0)
+                return openAnimationWindows[0];
+
+            return null;
+        }
+
+        static AnimClipAndTime GetAnimationWindowCurrentClip()
+        {
+            UnityEngine.Object w = GetOpenAnimationWindow();
+            AnimClipAndTime result = new AnimClipAndTime();
+
+            if (null != w) {
+                BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+                FieldInfo animEditor = GetAnimationWindowType().GetField("m_AnimEditor", flags);
+
+                object animEditorObject = animEditor.GetValue(w);
+                FieldInfo animWindowState = animEditor.FieldType.GetField("m_State", flags);
+                Type windowStateType = animWindowState.FieldType;
+                object stateObject = animWindowState.GetValue(animEditorObject);
+
+                object root = windowStateType.GetProperty("activeRootGameObject").GetValue(stateObject);
+                //object root = windowStateType.GetProperty("activeGameObject").GetValue(stateObject);
+                object clip = windowStateType.GetProperty("activeAnimationClip").GetValue(stateObject);
+                object time = windowStateType.GetProperty("currentTime").GetValue(stateObject);
+
+                result.root = (GameObject)root;
+                result.clip = (AnimationClip)clip;
+                result.time = (float)time;
+            }
+
+            return result;
         }
 
         static void HierarchyWindowItemOnGUI(int instanceID, Rect selectionRect)
         {
             //skips early if item is not registered or not valid
-            if (!sceneGameObjects.ContainsKey(instanceID)) return;
+            if (!sceneGameObjects.ContainsKey(instanceID))
+                return;
 
-            if (texBtnOff == null)
+            if (null == texBtnOff)
                 texBtnOff = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/BtnOff.png");
 
-            if (texBtnOn == null)
+            if (null == texBtnOn)
                 texBtnOn = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/BtnOn.png");
 
-            if (texStatic == null)
+            if (null == texStatic)
                 texStatic = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.laurarozier.lauraeditor/Textures/IconPin.png");
 
             currentItem = sceneGameObjects[instanceID];
             temp_iconsDrawedCount = 0;
 
-            if (instanceID == firstInstanceID)
+            if (firstInstanceID == instanceID)
                 temp_alternatingDrawed = currentItem.NestingGroup % 2 == 0;
 
             GameObject go = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
 
-            if (go == null)
+            if (null == go)
                 return;
 
             #region Draw Alternating BG
-            if (Config.HierarchyConfig.AlternateBackground)
-            {
+            if (Config.HierarchyConfig.AlternateBackground) {
                 if (temp_alternatingDrawed)
                     EditorGUI.DrawRect(selectionRect, Config.HierarchyConfig.AlternateBackgroundColor);
 
@@ -357,14 +413,10 @@ namespace LauraEditor.Editor.Hierarchy
             #endregion
 
             #region Drawing Tree
-            if (Config.HierarchyConfig.TreeEnabled && currentItem.NestingLevel >= 0)
-            {
-                if (selectionRect.x >= 60) // Prevents drawing when the hierarchy search mode is enabled 
-                {
-                    for (var i = 0; i < currentItem.HLines.Length; i++)
-                    {
-                        switch (currentItem.HLines[i])
-                        {
+            if (Config.HierarchyConfig.TreeEnabled && currentItem.NestingLevel >= 0) {
+                if (selectionRect.x >= 60) { // Prevents drawing when the hierarchy search mode is enabled
+                    for (var i = 0; i < currentItem.HLines.Length; i++) {
+                        switch (currentItem.HLines[i]) {
                         case HLineType.None: break;
                         case HLineType.Half:
                             {
@@ -388,8 +440,7 @@ namespace LauraEditor.Editor.Hierarchy
                 }
 
                 // Draws a super small divider between different groups
-                if (currentItem.NestingLevel == 0 && Config.HierarchyConfig.TreeDividerHeigth > 0)
-                {
+                if (currentItem.NestingLevel == 0 && Config.HierarchyConfig.TreeDividerHeigth > 0) {
                     Rect boldGroupRect = new Rect(
                         32, selectionRect.y - Config.HierarchyConfig.TreeDividerHeigth / 2f,
                         selectionRect.width + (selectionRect.x - 32),
@@ -401,22 +452,35 @@ namespace LauraEditor.Editor.Hierarchy
             #endregion
 
             #region Draw Activation Toggle
-            if (Config.HierarchyConfig.DrawActivationToggle && texBtnOff != null && texBtnOn != null)
-            {
+            if (Config.HierarchyConfig.DrawActivationToggle && texBtnOff != null && texBtnOn != null) {
                 var btnContent = new GUIContent(go.activeSelf ? texBtnOn : texBtnOff, "GameObject Active");
 
                 if (GUI.Button(
-                    new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
+                    new Rect(
+                        selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2,
+                        selectionRect.yMin,
+                        16,
+                        16
+                    ),
                     btnContent,
-                    ImgBtnStyle))
-                {
-                    go.SetActive(!go.activeSelf);
+                    ImgBtnStyle
+                )) {
+                    /*
+                    if (AnimationMode.InAnimationMode() && !EditorApplication.isPlaying) {
+                        AnimClipAndTime clipAndtime = GetAnimationWindowCurrentClip();
+                        go.SetActive(!go.activeSelf);
 
-                    if (EditorApplication.isPlaying == false)
-                    {
-                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(go.scene);
+                        AnimationMode.BeginSampling();
+                        AnimationMode.SampleAnimationClip(clipAndtime.root, clipAndtime.clip, clipAndtime.time);
+                        AnimationMode.EndSampling();
+                    } else {
+                    */
+                        go.SetActive(!go.activeSelf);
                         EditorUtility.SetDirty(go);
-                    }
+
+                        if (!EditorApplication.isPlaying)
+                            EditorSceneManager.MarkSceneDirty(go.scene);
+                    //}
                 }
             }
             #endregion
@@ -426,6 +490,12 @@ namespace LauraEditor.Editor.Hierarchy
 
             if (hasScript && monoScript.GetType().FullName == "LauraEditor.Runtime.Separator.SeparatorHeader")
                 return;
+
+            if (HasError(go))
+                GUI.DrawTexture(
+                    new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
+                    texErr
+                );
 
             if (go.isStatic && texStatic != null)
                 GUI.DrawTexture(
@@ -448,266 +518,249 @@ namespace LauraEditor.Editor.Hierarchy
 
         static void DrawComponentIconsToGUI(Component componentType, Rect selectionRect, ref List<string> addedTypes)
         {
-            if (componentType == null)
+            if (null == componentType)
                 return;
 
             #region AR Icons
-            if (componentType is WorldAnchor)
-            {
+            if (componentType is WorldAnchor) {
                 var fullName = typeof(WorldAnchor).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texWorldAnchor
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Audio Icons
-            if (componentType is AudioChorusFilter)
-            {
+            if (componentType is AudioChorusFilter) {
                 var fullName = typeof(AudioChorusFilter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioChorusFilter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is AudioDistortionFilter)
-            {
+            if (componentType is AudioDistortionFilter) {
                 var fullName = typeof(AudioDistortionFilter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioDistortionFilter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is AudioEchoFilter)
-            {
+            if (componentType is AudioEchoFilter) {
                 var fullName = typeof(AudioEchoFilter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioEchoFilter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is AudioHighPassFilter)
-            {
+            if (componentType is AudioHighPassFilter) {
                 var fullName = typeof(AudioHighPassFilter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioHighPassFilter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is AudioListener)
-            {
+            if (componentType is AudioListener) {
                 var fullName = typeof(AudioListener).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioListener
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is AudioLowPassFilter)
-            {
+            if (componentType is AudioLowPassFilter) {
                 var fullName = typeof(AudioLowPassFilter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioLowPassFilter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is AudioReverbFilter)
-            {
+            if (componentType is AudioReverbFilter) {
                 var fullName = typeof(AudioReverbFilter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioReverbFilter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is AudioReverbZone)
-            {
+            if (componentType is AudioReverbZone) {
                 var fullName = typeof(AudioReverbZone).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioReverbZone
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is AudioSource)
-            {
+            if (componentType is AudioSource) {
                 var fullName = typeof(AudioSource).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAudioSource
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Effects Icons
-            if (componentType.GetType().Name == "Halo")
-            {
+            if (componentType.GetType().Name == "Halo") {
                 var fullName = componentType.GetType().FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texHalo
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is LensFlare)
-            {
+            if (componentType is LensFlare) {
                 var fullName = typeof(LensFlare).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texLensFlare
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is LineRenderer)
-            {
+            if (componentType is LineRenderer) {
                 var fullName = typeof(LineRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texLineRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is ParticleSystem)
-            {
+            if (componentType is ParticleSystem) {
                 var fullName = typeof(ParticleSystem).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texParticleSystem
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Projector)
-            {
+            if (componentType is Projector) {
                 var fullName = typeof(Projector).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texProjector
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is TrailRenderer)
-            {
+            if (componentType is TrailRenderer) {
                 var fullName = typeof(TrailRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texTrailRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is VisualEffect)
-            {
+            if (componentType is VisualEffect) {
                 var fullName = typeof(VisualEffect).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texVisualEffect
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion

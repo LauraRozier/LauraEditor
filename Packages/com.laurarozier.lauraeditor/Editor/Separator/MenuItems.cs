@@ -10,7 +10,7 @@ namespace LauraEditor.Editor.Separator
         public static void CreateHeader()
         {
             // Mark as EditorOnly, so it will not included in final build
-            var separator = new GameObject { tag = "EditorOnly" };
+            GameObject separator = new GameObject { tag = "EditorOnly" };
             // Hide the transform
             separator.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
             separator.AddComponent<SeparatorHeader>();
