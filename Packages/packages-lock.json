@@ -48,7 +48,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.nuget.newtonsoft-json": {
-      "version": "2.0.2",
+      "version": "3.0.2",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -117,6 +117,22 @@
         "com.unity.nuget.newtonsoft-json": "2.0.2"
       },
       "hash": "681693b1ebf995f6d6f7e9bfdfda41e316623bbf"
+    },
+    "com.vrchat.core.bootstrap": {
+      "version": "file:com.vrchat.core.bootstrap",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "2.0.2"
+      }
+    },
+    "com.vrchat.core.vpm-resolver": {
+      "version": "file:com.vrchat.core.vpm-resolver",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
+      }
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",
