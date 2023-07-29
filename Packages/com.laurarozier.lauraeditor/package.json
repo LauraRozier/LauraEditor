@@ -20,6 +20,9 @@
   "dependencies": {
     "com.unity.settings-manager": "1.0.3"
   },
+  "vpmDependencies": {
+    "com.unity.settings-manager": "1.0.3"
+  },
   "license": "MIT",
   "licensesUrl": "https://raw.githubusercontent.com/LauraRozier/LauraEditor/master/LICENSE"
 }
