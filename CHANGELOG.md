@@ -1,3 +1,6 @@
+# 1.0.9
+- Fix licenses URL
+
 # 1.0.8
 - Add changelog
 - Fix license URL in package.json
