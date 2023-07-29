@@ -2,6 +2,9 @@ name: Build Release
 
 on: 
   workflow_dispatch:
+  push:
+    branches: master
+    paths: Packages/com.laurarozier.lauraeditor/package.json
 
 env:
   packageName: "com.laurarozier.lauraeditor"
