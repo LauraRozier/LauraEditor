@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Experimental.SceneManagement;
-using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 using UnityEngine.Animations;
 using UnityEngine.XR.WSA;
@@ -16,7 +15,6 @@ using UnityEngine.Playables;
 using UnityEngine.Rendering;
 using UnityEngine.Tilemaps;
 using UnityEngine.Video;
-using System.Reflection;
 
 namespace LauraEditor.Editor.Hierarchy
 {
@@ -83,13 +81,6 @@ namespace LauraEditor.Editor.Hierarchy
                     Config.HierarchyConfig.TreeLineColor
                 );
             }
-        }
-
-        struct AnimClipAndTime
-        {
-            public GameObject root;
-            public AnimationClip clip;
-            public float time;
         }
 
         private static bool initialized = false;
@@ -350,33 +341,6 @@ namespace LauraEditor.Editor.Hierarchy
             return null;
         }
 
-        static AnimClipAndTime GetAnimationWindowCurrentClip()
-        {
-            UnityEngine.Object w = GetOpenAnimationWindow();
-            AnimClipAndTime result = new AnimClipAndTime();
-
-            if (null != w) {
-                BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
-                FieldInfo animEditor = GetAnimationWindowType().GetField("m_AnimEditor", flags);
-
-                object animEditorObject = animEditor.GetValue(w);
-                FieldInfo animWindowState = animEditor.FieldType.GetField("m_State", flags);
-                Type windowStateType = animWindowState.FieldType;
-                object stateObject = animWindowState.GetValue(animEditorObject);
-
-                object root = windowStateType.GetProperty("activeRootGameObject").GetValue(stateObject);
-                //object root = windowStateType.GetProperty("activeGameObject").GetValue(stateObject);
-                object clip = windowStateType.GetProperty("activeAnimationClip").GetValue(stateObject);
-                object time = windowStateType.GetProperty("currentTime").GetValue(stateObject);
-
-                result.root = (GameObject)root;
-                result.clip = (AnimationClip)clip;
-                result.time = (float)time;
-            }
-
-            return result;
-        }
-
         static void HierarchyWindowItemOnGUI(int instanceID, Rect selectionRect)
         {
             //skips early if item is not registered or not valid
@@ -465,22 +429,9 @@ namespace LauraEditor.Editor.Hierarchy
                     btnContent,
                     ImgBtnStyle
                 )) {
-                    /*
-                    if (AnimationMode.InAnimationMode() && !EditorApplication.isPlaying) {
-                        AnimClipAndTime clipAndtime = GetAnimationWindowCurrentClip();
-                        go.SetActive(!go.activeSelf);
-
-                        AnimationMode.BeginSampling();
-                        AnimationMode.SampleAnimationClip(clipAndtime.root, clipAndtime.clip, clipAndtime.time);
-                        AnimationMode.EndSampling();
-                    } else {
-                    */
-                        go.SetActive(!go.activeSelf);
-                        EditorUtility.SetDirty(go);
-
-                        if (!EditorApplication.isPlaying)
-                            EditorSceneManager.MarkSceneDirty(go.scene);
-                    //}
+                    bool enabledState = !go.activeSelf;
+                    Undo.RecordObject(go, (enabledState ? "En" : "Dis") + "able Object");
+                    EditorUtility.SetObjectEnabled(go, enabledState);
                 }
             }
             #endregion
@@ -766,1151 +717,1082 @@ namespace LauraEditor.Editor.Hierarchy
             #endregion
 
             #region Events Icons
-            if (componentType is EventSystem)
-            {
+            if (componentType is EventSystem) {
                 var fullName = typeof(EventSystem).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texEventSystem
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is EventTrigger)
-            {
+            if (componentType is EventTrigger) {
                 var fullName = typeof(EventTrigger).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texEventTrigger
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is GraphicRaycaster)
-            {
+            if (componentType is GraphicRaycaster) {
                 var fullName = typeof(GraphicRaycaster).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texGraphicRaycaster
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Physics2DRaycaster)
-            {
+            if (componentType is Physics2DRaycaster) {
                 var fullName = typeof(Physics2DRaycaster).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texPhysics2DRaycaster
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is PhysicsRaycaster)
-            {
+            if (componentType is PhysicsRaycaster) {
                 var fullName = typeof(PhysicsRaycaster).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texPhysicsRaycaster
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is StandaloneInputModule)
-            {
+            if (componentType is StandaloneInputModule) {
                 var fullName = typeof(StandaloneInputModule).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texStandaloneInputModule
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (componentType is TouchInputModule)
-            {
+            if (componentType is TouchInputModule) {
                 var fullName = typeof(TouchInputModule).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texTouchInputModule
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 #pragma warning restore CS0618 // Type or member is obsolete
             #endregion
 
             #region Layout Icons
-            if (componentType is AspectRatioFitter)
-            {
+            if (componentType is AspectRatioFitter) {
                 var fullName = typeof(AspectRatioFitter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAspectRatioFitter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Canvas)
-            {
+            if (componentType is Canvas) {
                 var fullName = typeof(Canvas).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCanvas
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is CanvasGroup)
-            {
+            if (componentType is CanvasGroup) {
                 var fullName = typeof(CanvasGroup).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCanvasGroup
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is CanvasScaler)
-            {
+            if (componentType is CanvasScaler) {
                 var fullName = typeof(CanvasScaler).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCanvasScaler
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is ContentSizeFitter)
-            {
+            if (componentType is ContentSizeFitter) {
                 var fullName = typeof(ContentSizeFitter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texContentSizeFitter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is GridLayoutGroup)
-            {
+            if (componentType is GridLayoutGroup) {
                 var fullName = typeof(GridLayoutGroup).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texGridLayoutGroup
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is HorizontalLayoutGroup)
-            {
+            if (componentType is HorizontalLayoutGroup) {
                 var fullName = typeof(HorizontalLayoutGroup).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texHorizontalLayoutGroup
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is LayoutElement)
-            {
+            if (componentType is LayoutElement) {
                 var fullName = typeof(LayoutElement).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texLayoutElement
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is RectTransform)
-            {
+            if (componentType is RectTransform) {
                 var fullName = typeof(RectTransform).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texRectTransform
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is VerticalLayoutGroup)
-            {
+            if (componentType is VerticalLayoutGroup) {
                 var fullName = typeof(VerticalLayoutGroup).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texVerticalLayoutGroup
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Mesh Icons
-            if (componentType is MeshFilter)
-            {
+            if (componentType is MeshFilter) {
                 var fullName = typeof(MeshFilter).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texMeshFilter
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is MeshRenderer)
-            {
+            if (componentType is MeshRenderer) {
                 var fullName = typeof(MeshRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texMeshRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is SkinnedMeshRenderer)
-            {
+            if (componentType is SkinnedMeshRenderer) {
                 var fullName = typeof(SkinnedMeshRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texSkinnedMeshRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is TextMesh)
-            {
+            if (componentType is TextMesh) {
                 var fullName = typeof(TextMesh).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texTextMesh
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Miscellaneous Icons
-            if (componentType is AimConstraint)
-            {
+            if (componentType is AimConstraint) {
                 var fullName = typeof(AimConstraint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAimConstraint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Animation)
-            {
+            if (componentType is Animation) {
                 var fullName = typeof(Animation).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAnimation
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Animator)
-            {
+            if (componentType is Animator) {
                 var fullName = typeof(Animator).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texAnimator
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is BillboardRenderer)
-            {
+            if (componentType is BillboardRenderer) {
                 var fullName = typeof(BillboardRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texBillboardRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Grid)
-            {
+            if (componentType is Grid) {
                 var fullName = typeof(Grid).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texGrid
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is LookAtConstraint)
-            {
+            if (componentType is LookAtConstraint) {
                 var fullName = typeof(LookAtConstraint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texLookAtConstraint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is ParentConstraint)
-            {
+            if (componentType is ParentConstraint) {
                 var fullName = typeof(ParentConstraint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texParentConstraint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is ParticleSystemForceField)
-            {
+            if (componentType is ParticleSystemForceField) {
                 var fullName = typeof(ParticleSystemForceField).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texParticleSystemForceField
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is PositionConstraint)
-            {
+            if (componentType is PositionConstraint) {
                 var fullName = typeof(PositionConstraint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texPositionConstraint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is RotationConstraint)
-            {
+            if (componentType is RotationConstraint) {
                 var fullName = typeof(RotationConstraint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texRotationConstraint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is ScaleConstraint)
-            {
+            if (componentType is ScaleConstraint) {
                 var fullName = typeof(ScaleConstraint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texScaleConstraint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is SpriteMask)
-            {
+            if (componentType is SpriteMask) {
                 var fullName = typeof(SpriteMask).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texSpriteMask
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is SpriteShapeRenderer)
-            {
+            if (componentType is SpriteShapeRenderer) {
                 var fullName = typeof(SpriteShapeRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texSpriteShapeRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Terrain)
-            {
+            if (componentType is Terrain) {
                 var fullName = typeof(Terrain).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texTerrain
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is WindZone)
-            {
+            if (componentType is WindZone) {
                 var fullName = typeof(WindZone).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texWindZone
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Navigation Icons
-            if (componentType is NavMeshAgent)
-            {
+            if (componentType is NavMeshAgent) {
                 var fullName = typeof(NavMeshAgent).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texNavMeshAgent
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is NavMeshObstacle)
-            {
+            if (componentType is NavMeshObstacle) {
                 var fullName = typeof(NavMeshObstacle).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texNavMeshObstacle
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is OffMeshLink)
-            {
+            if (componentType is OffMeshLink) {
                 var fullName = typeof(OffMeshLink).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texOffMeshLink
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Physics 2D Icons
             /*
-            if (componentType is VideoPlayer)
-            {
+            if (componentType is VideoPlayer) {
                 var fullName = typeof(VideoPlayer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texVideoPlayer
                     );
                     addedTypes.Add(fullName);
                 }
+
+                return;
             }
             */
             #endregion
 
             #region Physics Icons
-            if (componentType is BoxCollider)
-            {
+            if (componentType is BoxCollider) {
                 var fullName = typeof(BoxCollider).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texBoxCollider
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is CapsuleCollider)
-            {
+            if (componentType is CapsuleCollider) {
                 var fullName = typeof(CapsuleCollider).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCapsuleCollider
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is CharacterController)
-            {
+            if (componentType is CharacterController) {
                 var fullName = typeof(CharacterController).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCharacterController
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is CharacterJoint)
-            {
+            if (componentType is CharacterJoint) {
                 var fullName = typeof(CharacterJoint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCharacterJoint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Cloth)
-            {
+            if (componentType is Cloth) {
                 var fullName = typeof(Cloth).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCloth
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is ConfigurableJoint)
-            {
+            if (componentType is ConfigurableJoint) {
                 var fullName = typeof(ConfigurableJoint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texConfigurableJoint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is ConstantForce)
-            {
+            if (componentType is ConstantForce) {
                 var fullName = typeof(ConstantForce).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texConstantForce
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is FixedJoint)
-            {
+            if (componentType is FixedJoint) {
                 var fullName = typeof(FixedJoint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texFixedJoint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is HingeJoint)
-            {
+            if (componentType is HingeJoint) {
                 var fullName = typeof(HingeJoint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texHingeJoint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is MeshCollider)
-            {
+            if (componentType is MeshCollider) {
                 var fullName = typeof(MeshCollider).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texMeshCollider
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Rigidbody)
-            {
+            if (componentType is Rigidbody) {
                 var fullName = typeof(Rigidbody).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texRigidbody
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is SphereCollider)
-            {
+            if (componentType is SphereCollider) {
                 var fullName = typeof(SphereCollider).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texSphereCollider
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is SpringJoint)
-            {
+            if (componentType is SpringJoint) {
                 var fullName = typeof(SpringJoint).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texSpringJoint
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is TerrainCollider)
-            {
+            if (componentType is TerrainCollider) {
                 var fullName = typeof(TerrainCollider).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texTerrainCollider
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is WheelCollider)
-            {
+            if (componentType is WheelCollider) {
                 var fullName = typeof(WheelCollider).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texWheelCollider
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Playables Icons
-            if (componentType is PlayableDirector)
-            {
+            if (componentType is PlayableDirector) {
                 var fullName = typeof(PlayableDirector).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texPlayableDirector
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Rendering Icons
-            if (componentType is Camera)
-            {
+            if (componentType is Camera) {
                 var fullName = typeof(Camera).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCamera
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is CanvasRenderer)
-            {
+            if (componentType is CanvasRenderer) {
                 var fullName = typeof(CanvasRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texCanvasRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is FlareLayer)
-            {
+            if (componentType is FlareLayer) {
                 var fullName = typeof(FlareLayer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texFlareLayer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Light)
-            {
+            if (componentType is Light) {
                 var fullName = typeof(Light).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texLight
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is LightProbeGroup)
-            {
+            if (componentType is LightProbeGroup) {
                 var fullName = typeof(LightProbeGroup).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName))  {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texLightProbeGroup
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is LightProbeProxyVolume)
-            {
+            if (componentType is LightProbeProxyVolume) {
                 var fullName = typeof(LightProbeProxyVolume).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texLightProbeProxyVolume
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is LODGroup)
-            {
+            if (componentType is LODGroup) {
                 var fullName = typeof(LODGroup).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texLODGroup
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is OcclusionArea)
-            {
+            if (componentType is OcclusionArea) {
                 var fullName = typeof(OcclusionArea).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texOcclusionArea
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is OcclusionPortal)
-            {
+            if (componentType is OcclusionPortal) {
                 var fullName = typeof(OcclusionPortal).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texOcclusionPortal
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is ReflectionProbe)
-            {
+            if (componentType is ReflectionProbe) {
                 var fullName = typeof(ReflectionProbe).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texReflectionProbe
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is Skybox)
-            {
+            if (componentType is Skybox) {
                 var fullName = typeof(Skybox).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texSkybox
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is SortingGroup)
-            {
+            if (componentType is SortingGroup) {
                 var fullName = typeof(SortingGroup).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texSortingGroup
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is SpriteRenderer)
-            {
+            if (componentType is SpriteRenderer) {
                 var fullName = typeof(SpriteRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texSpriteRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
 
-            if (componentType is StreamingController)
-            {
+            if (componentType is StreamingController) {
                 var fullName = typeof(StreamingController).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texStreamingController
                     );
                     addedTypes.Add(fullName);
                 }
+
                 return;
             }
             #endregion
 
             #region Tilemap Icons
-            if (componentType is Tilemap)
-            {
+            if (componentType is Tilemap) {
                 var fullName = typeof(Tilemap).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texTilemap
                     );
                     addedTypes.Add(fullName);
                 }
+
+                return;
             }
 
-            if (componentType is TilemapCollider2D)
-            {
+            if (componentType is TilemapCollider2D) {
                 var fullName = typeof(TilemapCollider2D).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texTilemapCollider2D
                     );
                     addedTypes.Add(fullName);
                 }
+
+                return;
             }
 
-            if (componentType is TilemapRenderer)
-            {
+            if (componentType is TilemapRenderer) {
                 var fullName = typeof(TilemapRenderer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texTilemapRenderer
                     );
                     addedTypes.Add(fullName);
                 }
+
+                return;
             }
             #endregion
 
             #region UI Icons
             /*
-            if (componentType is VideoPlayer)
-            {
+            if (componentType is VideoPlayer) {
                 var fullName = typeof(VideoPlayer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texVideoPlayer
                     );
                     addedTypes.Add(fullName);
                 }
+
+                return;
             }
             */
             #endregion
 
             #region Video Icons
-            if (componentType is VideoPlayer)
-            {
+            if (componentType is VideoPlayer) {
                 var fullName = typeof(VideoPlayer).FullName;
 
-                if (!addedTypes.Contains(fullName))
-                {
+                if (!addedTypes.Contains(fullName)) {
                     GUI.DrawTexture(
                         new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                         texVideoPlayer
                     );
                     addedTypes.Add(fullName);
                 }
+
+                return;
             }
             #endregion
         }
