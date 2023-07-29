@@ -1,16 +1,13 @@
 {
   "name": "com.laurarozier.lauraeditor",
-  "version": "1.0.6",
-  "description": "Editor modifications by LauraRozier, to make life easier. It overhauls the Hierarchy panel and adds named Editor-Only separators.",
   "displayName": "LauraEditor",
+  "description": "Editor modifications by LauraRozier, to make life easier. It overhauls the Hierarchy panel and adds named Editor-Only separators.",
+  "version": "1.0.7",
   "unity": "2019.4",
   "author": {
     "name": "LauraRozier",
     "email": "laura@chatfrog.games",
     "url": "https://github.com/LauraRozier"
-  },
-  "dependencies": {
-    "com.unity.settings-manager": "1.0.3"
   },
   "keywords": [
     "laurarozier",
@@ -19,5 +16,10 @@
     "separator",
     "customization"
   ],
-  "type": "tool"
+  "type": "tool",
+  "dependencies": {
+    "com.unity.settings-manager": "1.0.3"
+  },
+  "license": "MIT",
+  "licensesUrl": "https://raw.githubusercontent.com/LauraRozier/LauraEditor/master/LICENSE"
 }

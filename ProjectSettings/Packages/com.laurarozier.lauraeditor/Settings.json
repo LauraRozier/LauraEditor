@@ -42,6 +42,26 @@
                 "type": "System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
                 "key": "hierarchy.treeDividerHeigth",
                 "value": "{\"m_Value\":1.0}"
+            },
+            {
+                "type": "LauraEditor.Runtime.Separator.SepType, LauraEditor.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "separator.type",
+                "value": "{\"m_Value\":0}"
+            },
+            {
+                "type": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "separator.maxLength",
+                "value": "{\"m_Value\":30}"
+            },
+            {
+                "type": "LauraEditor.Runtime.Separator.SepAlignment, LauraEditor.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "separator.alignment",
+                "value": "{\"m_Value\":1}"
+            },
+            {
+                "type": "System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "separator.customFill",
+                "value": "{\"m_Value\":\"\"}"
             }
         ]
     }
