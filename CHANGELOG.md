@@ -1,3 +1,6 @@
+# 1.0.10
+- Fix an issue with dependencies
+
 # 1.0.9
 - Fix licenses URL
 
