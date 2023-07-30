@@ -1,3 +1,7 @@
+# 1.0.11
+- Optimize hierarchy icon rendering
+- Cleanup superfluous code
+
 # 1.0.10
 - Fix an issue with dependencies
 
