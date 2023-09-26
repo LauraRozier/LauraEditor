@@ -14,6 +14,10 @@ As the name suggests, just a bunch of separators you can use to clean up your hi
 
 ![image](https://user-images.githubusercontent.com/12035362/234895054-7e441be4-e798-4f02-9a03-0d4f385a727a.png)
 
+### Auto Save
+
+A configurable autosaver, defaults to enabled and triggers every 5 minutes.
+
 ## Help / Feature Requests
 
 Either create a ticket here, or message LauraRozier#9999 on Discord, please provide your experienced issue and where possible the steps to recreate the issue.

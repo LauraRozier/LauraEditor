@@ -1,4 +1,5 @@
-﻿using LauraEditor.Editor.Hierarchy;
+﻿using LauraEditor.Editor.AutoSave;
+using LauraEditor.Editor.Hierarchy;
 using LauraEditor.Runtime.Separator;
 using UnityEditor;
 using UnityEditor.SettingsManagement;
@@ -27,6 +28,12 @@ namespace LauraEditor.Editor
             [UserSetting] public static UserSetting<bool> TreeEnabled = new UserSetting<bool>(Instance, "hierarchy.treeEnabled", true);
             [UserSetting] public static UserSetting<float> TreeDividerHeigth = new UserSetting<float>(Instance, "hierarchy.treeDividerHeigth", 1);
             [UserSetting] public static UserSetting<Color> TreeLineColor = new UserSetting<Color>(Instance, "hierarchy.treeLineColor", new Color(0.6f, 0.6f, 0.6f, 1f));
+        }
+
+        public static class AutoSaveConfig
+        {
+            [UserSetting] public static UserSetting<bool> Enabled = new UserSetting<bool>(Instance, "autosave.enabled", true);
+            [UserSetting] public static UserSetting<int> Delay = new UserSetting<int>(Instance, "autosave.delay", 300);
         }
 
         internal const string k_PackageName = "com.laurarozier.lauraeditor";
@@ -123,6 +130,22 @@ namespace LauraEditor.Editor
                 if (scope.changed) {
                     Instance.Save();
                     HierarchyWindow.Initialize();
+                }
+            }
+        }
+
+        [UserSettingBlock("Auto Save")]
+        public static void AutoSaveSettingsGUI(string searchContext)
+        {
+            using (var scope = new EditorGUI.ChangeCheckScope())
+            {
+                AutoSaveConfig.Enabled.value = SettingsGUILayout.SettingsToggle("Enabled", AutoSaveConfig.Enabled, searchContext);
+                AutoSaveConfig.Delay.value = SettingsGUILayout.SettingsIntField("Delay in seconds", AutoSaveConfig.Delay, searchContext);
+
+                if (scope.changed)
+                {
+                    Instance.Save();
+                    AutoSaveUtil.Initialize();
                 }
             }
         }

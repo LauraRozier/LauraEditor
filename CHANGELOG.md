@@ -1,3 +1,6 @@
+# 1.0.12
+- Add auto save
+
 # 1.0.11
 - Optimize hierarchy icon rendering
 - Cleanup superfluous code
