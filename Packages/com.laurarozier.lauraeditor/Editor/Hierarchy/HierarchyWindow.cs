@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.Experimental.SceneManagement;
+
 using UnityEngine.SceneManagement;
 using UnityEngine.Animations;
 using UnityEngine.XR.WSA;
@@ -114,10 +114,12 @@ namespace LauraEditor.Editor.Hierarchy
         private static readonly TypeIconData[] typeIconDataList = new TypeIconData[]
         {
             #region AR Icons
+#if !UNITY_2022_3_OR_NEWER
             new TypeIconData {
                 ObjType = typeof(WorldAnchor),
                 Icon = EditorGUIUtility.IconContent("WorldAnchor Icon").image
             },
+#endif
             #endregion AR Icons
 
             #region Audio Icons
@@ -516,7 +518,7 @@ namespace LauraEditor.Editor.Hierarchy
             },
             #endregion Video Icons
         };
-        #endregion
+#endregion
 
         #region Initialization
         /// <summary>
@@ -553,10 +555,10 @@ namespace LauraEditor.Editor.Hierarchy
                 return;
 
             sceneGameObjects.Clear();
-            PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            UnityEditor.SceneManagement.PrefabStage prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
 
             if (null != prefabStage) {
-                GameObject prefabContentsRoot = PrefabStageUtility.GetCurrentPrefabStage().prefabContentsRoot;
+                GameObject prefabContentsRoot = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage().prefabContentsRoot;
                 AnalyzeGoWithChildren(prefabContentsRoot, -1, 0, true, new HLineType[0]);
                 firstInstanceID = prefabContentsRoot.GetInstanceID();
                 return;
