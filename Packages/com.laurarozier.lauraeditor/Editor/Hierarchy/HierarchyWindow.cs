@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEditor;
-
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Animations;
-using UnityEngine.XR.WSA;
 using UnityEngine.VFX;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -16,6 +14,15 @@ using UnityEngine.Rendering;
 using UnityEngine.Tilemaps;
 using UnityEngine.Video;
 using System.Linq;
+
+#if UNITY_2022_3_OR_NEWER
+using OurPrefabStage = UnityEditor.SceneManagement.PrefabStage;
+using OurPrefabStageUtility = UnityEditor.SceneManagement.PrefabStageUtility;
+#else
+using UnityEngine.XR.WSA;
+using OurPrefabStage = UnityEditor.Experimental.SceneManagement.PrefabStage;
+using OurPrefabStageUtility = UnityEditor.Experimental.SceneManagement.PrefabStageUtility;
+#endif
 
 namespace LauraEditor.Editor.Hierarchy
 {
@@ -120,7 +127,7 @@ namespace LauraEditor.Editor.Hierarchy
                 Icon = EditorGUIUtility.IconContent("WorldAnchor Icon").image
             },
 #endif
-            #endregion AR Icons
+#endregion AR Icons
 
             #region Audio Icons
             new TypeIconData {
@@ -518,7 +525,7 @@ namespace LauraEditor.Editor.Hierarchy
             },
             #endregion Video Icons
         };
-#endregion
+        #endregion
 
         #region Initialization
         /// <summary>
@@ -527,7 +534,8 @@ namespace LauraEditor.Editor.Hierarchy
         public static void Initialize()
         {
             // Unregisters previous events
-            if (initialized) {
+            if (initialized)
+            {
                 // Prevents registering events multiple times
                 EditorApplication.hierarchyWindowItemOnGUI -= HierarchyWindowItemOnGUI;
                 EditorApplication.hierarchyChanged -= RetrieveDataFromScene;
@@ -535,7 +543,8 @@ namespace LauraEditor.Editor.Hierarchy
 
             initialized = true;
 
-            if (Config.HierarchyConfig.Enabled) {
+            if (Config.HierarchyConfig.Enabled)
+            {
                 EditorApplication.hierarchyWindowItemOnGUI += HierarchyWindowItemOnGUI;
                 EditorApplication.hierarchyChanged += RetrieveDataFromScene;
 
@@ -555,10 +564,11 @@ namespace LauraEditor.Editor.Hierarchy
                 return;
 
             sceneGameObjects.Clear();
-            UnityEditor.SceneManagement.PrefabStage prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+            OurPrefabStage prefabStage = OurPrefabStageUtility.GetCurrentPrefabStage();
 
-            if (null != prefabStage) {
-                GameObject prefabContentsRoot = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage().prefabContentsRoot;
+            if (null != prefabStage)
+            {
+                GameObject prefabContentsRoot = prefabStage.prefabContentsRoot;
                 AnalyzeGoWithChildren(prefabContentsRoot, -1, 0, true, new HLineType[0]);
                 firstInstanceID = prefabContentsRoot.GetInstanceID();
                 return;
@@ -568,10 +578,12 @@ namespace LauraEditor.Editor.Hierarchy
             Scene tempScene;
             firstInstanceID = -1;
 
-            for (int i = 0; i < SceneManager.sceneCount; i++) {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
                 tempScene = SceneManager.GetSceneAt(i);
 
-                if (tempScene.isLoaded) {
+                if (tempScene.isLoaded)
+                {
                     sceneRoots = tempScene.GetRootGameObjects();
 
                     // Analyzes all scene's gameObjects
@@ -589,7 +601,8 @@ namespace LauraEditor.Editor.Hierarchy
             int instanceID = go.GetInstanceID();
             List<HLineType> newHLines;
 
-            if (!sceneGameObjects.ContainsKey(instanceID)) { // Processes the gameobject only if it wasn't processed already
+            if (!sceneGameObjects.ContainsKey(instanceID))
+            { // Processes the gameobject only if it wasn't processed already
                 newHLines = new List<HLineType>(hLines);
 
                 if (newHLines.Count > 0 && newHLines[newHLines.Count - 1] == HLineType.Half)
@@ -597,7 +610,8 @@ namespace LauraEditor.Editor.Hierarchy
 
                 newHLines.Add(isLastChild ? HLineType.Half : HLineType.Full);
 
-                InstanceInfo newInfo = new InstanceInfo {
+                InstanceInfo newInfo = new InstanceInfo
+                {
                     NestingLevel = nestingLevel,
                     NestingGroup = nestingGroup,
                     HasChilds = go.transform.childCount > 0,
@@ -608,14 +622,17 @@ namespace LauraEditor.Editor.Hierarchy
 
                 // Adds element to the array
                 sceneGameObjects.Add(instanceID, newInfo);
-            } else {
+            }
+            else
+            {
                 newHLines = new List<HLineType>(sceneGameObjects[instanceID].HLines);
             }
 
             // Analyzes Childrens
             int childCount = go.transform.childCount;
 
-            for (int j = 0; j < childCount; j++) {
+            for (int j = 0; j < childCount; j++)
+            {
                 AnalyzeGoWithChildren(
                     go.transform.GetChild(j).gameObject,
                     nestingLevel + 1,
@@ -661,7 +678,8 @@ namespace LauraEditor.Editor.Hierarchy
                 return;
 
             #region Draw Alternating BG
-            if (Config.HierarchyConfig.AlternateBackground) {
+            if (Config.HierarchyConfig.AlternateBackground)
+            {
                 if (temp_alternatingDrawed)
                     EditorGUI.DrawRect(selectionRect, Config.HierarchyConfig.AlternateBackgroundColor);
 
@@ -670,22 +688,26 @@ namespace LauraEditor.Editor.Hierarchy
             #endregion
 
             #region Drawing Tree
-            if (Config.HierarchyConfig.TreeEnabled && currentItem.NestingLevel >= 0) {
-                if (selectionRect.x >= 60) { // Prevents drawing when the hierarchy search mode is enabled
-                    for (var i = 0; i < currentItem.HLines.Length; i++) {
-                        switch (currentItem.HLines[i]) {
-                        case HLineType.None: break;
-                        case HLineType.Half:
-                            {
-                                HierarchyRenderer.DrawHalfVerticalLineFrom(selectionRect, true, i);
-                                break;
-                            }
-                        case HLineType.Full:
-                            {
-                                HierarchyRenderer.DrawHalfVerticalLineFrom(selectionRect, true, i);
-                                HierarchyRenderer.DrawHalfVerticalLineFrom(selectionRect, false, i);
-                                break;
-                            }
+            if (Config.HierarchyConfig.TreeEnabled && currentItem.NestingLevel >= 0)
+            {
+                if (selectionRect.x >= 60)
+                { // Prevents drawing when the hierarchy search mode is enabled
+                    for (var i = 0; i < currentItem.HLines.Length; i++)
+                    {
+                        switch (currentItem.HLines[i])
+                        {
+                            case HLineType.None: break;
+                            case HLineType.Half:
+                                {
+                                    HierarchyRenderer.DrawHalfVerticalLineFrom(selectionRect, true, i);
+                                    break;
+                                }
+                            case HLineType.Full:
+                                {
+                                    HierarchyRenderer.DrawHalfVerticalLineFrom(selectionRect, true, i);
+                                    HierarchyRenderer.DrawHalfVerticalLineFrom(selectionRect, false, i);
+                                    break;
+                                }
                         }
                     }
 
@@ -697,7 +719,8 @@ namespace LauraEditor.Editor.Hierarchy
                 }
 
                 // Draws a super small divider between different groups
-                if (currentItem.NestingLevel == 0 && Config.HierarchyConfig.TreeDividerHeigth > 0) {
+                if (currentItem.NestingLevel == 0 && Config.HierarchyConfig.TreeDividerHeigth > 0)
+                {
                     Rect boldGroupRect = new Rect(
                         32, selectionRect.y - Config.HierarchyConfig.TreeDividerHeigth / 2f,
                         selectionRect.width + (selectionRect.x - 32),
@@ -709,7 +732,8 @@ namespace LauraEditor.Editor.Hierarchy
             #endregion
 
             #region Draw Activation Toggle
-            if (Config.HierarchyConfig.DrawActivationToggle && texBtnOff != null && texBtnOn != null) {
+            if (Config.HierarchyConfig.DrawActivationToggle && texBtnOff != null && texBtnOn != null)
+            {
                 var btnContent = new GUIContent(go.activeSelf ? texBtnOn : texBtnOff, "GameObject Active");
 
                 if (GUI.Button(
@@ -721,7 +745,8 @@ namespace LauraEditor.Editor.Hierarchy
                     ),
                     btnContent,
                     ImgBtnStyle
-                )) {
+                ))
+                {
                     bool enabledState = !go.activeSelf;
                     Undo.RecordObject(go, (enabledState ? "En" : "Dis") + "able Object");
                     EditorUtility.SetObjectEnabled(go, enabledState);
@@ -771,20 +796,26 @@ namespace LauraEditor.Editor.Hierarchy
             TypeIconData data = typeIconDataList.FirstOrDefault(x => x.ObjType.Equals(componentType));
 
             // Exit when we don't know the type
-            if (data.Equals(default(TypeIconData))) {
-                if (componentType.Name == "Halo") {
-                    data = new TypeIconData {
+            if (data.Equals(default(TypeIconData)))
+            {
+                if (componentType.Name == "Halo")
+                {
+                    data = new TypeIconData
+                    {
                         ObjType = componentType,
                         Icon = texHalo
                     };
-                } else {
+                }
+                else
+                {
                     return;
                 }
             }
 
             string fullName = data.ObjType.FullName;
 
-            if (!addedTypes.Contains(fullName)) {
+            if (!addedTypes.Contains(fullName))
+            {
                 GUI.DrawTexture(
                     new Rect(selectionRect.xMax - 16 * ++temp_iconsDrawedCount - 2, selectionRect.yMin, 16, 16),
                     data.Icon
