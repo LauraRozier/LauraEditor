@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Timers;
 using UnityEditor;
@@ -69,3 +70,4 @@ namespace LauraEditor.Editor.AutoSave
         }
     }
 }
+#endif

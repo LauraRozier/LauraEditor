@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿#if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine;
 using LauraEditor.Runtime.Separator;
 
@@ -25,3 +26,4 @@ namespace LauraEditor.Editor.Separator
         }
     }
 }
+#endif

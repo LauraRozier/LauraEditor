@@ -1,4 +1,5 @@
-﻿using LauraEditor.Editor.AutoSave;
+﻿#if UNITY_EDITOR
+using LauraEditor.Editor.AutoSave;
 using LauraEditor.Editor.Hierarchy;
 using LauraEditor.Runtime.Separator;
 using UnityEditor;
@@ -151,3 +152,4 @@ namespace LauraEditor.Editor
         }
     }
 }
+#endif

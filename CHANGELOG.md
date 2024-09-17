@@ -1,3 +1,14 @@
+# 1.0.15
+- Fix the object state toggle popping up a question
+- Wrap editor-only code in UnityEditor only preprocessor tags
+
+# 1.0.14
+- Fix 2019 compat
+- Simplify prefab handling
+
+# 1.0.13
+- Fix 2022 compilation issues
+
 # 1.0.12
 - Add auto save
 

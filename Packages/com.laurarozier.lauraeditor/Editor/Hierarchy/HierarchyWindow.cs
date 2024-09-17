@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -745,11 +746,11 @@ namespace LauraEditor.Editor.Hierarchy
                     ),
                     btnContent,
                     ImgBtnStyle
-                ))
-                {
+                )) {
                     bool enabledState = !go.activeSelf;
-                    Undo.RecordObject(go, (enabledState ? "En" : "Dis") + "able Object");
-                    EditorUtility.SetObjectEnabled(go, enabledState);
+                    Undo.RecordObject(go, $"{(enabledState ? "En" : "Dis")}able Object {go.name}");
+                    go.SetActive(enabledState);
+                    EditorUtility.SetDirty(go);
                 }
             }
             #endregion
@@ -825,3 +826,4 @@ namespace LauraEditor.Editor.Hierarchy
         }
     }
 }
+#endif
