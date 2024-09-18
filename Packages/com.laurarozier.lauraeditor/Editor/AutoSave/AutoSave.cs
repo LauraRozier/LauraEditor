@@ -10,8 +10,8 @@ namespace LauraEditor.Editor.AutoSave
     [InitializeOnLoad]
     public static class AutoSaveUtil
     {
-        private static Timer timer = null;
-        private static bool doUpdate = false;
+        private static Timer _timer = null;
+        private static bool _indPerformSave = false;
 
         static AutoSaveUtil()
         {
@@ -20,53 +20,61 @@ namespace LauraEditor.Editor.AutoSave
 
         #region Initialization
         /// <summary>
-        /// Initializes the script at the beginning. 
+        /// Initializes the script at the beginning.
         /// </summary>
         public static void Initialize()
         {
-            if (timer == null)
+            if (_timer == null)
             {
-                timer = new Timer();
-                timer.Elapsed += OnTimer;
-                timer.AutoReset = true;
+                _timer = new Timer();
+                _timer.Elapsed += OnTimer;
+                _timer.AutoReset = true;
 
                 EditorApplication.update += OnEditorUpdate;
             }
 
             if (Config.AutoSaveConfig.Delay.value <= 0)
             {
-                timer.Enabled = false;
+                _timer.Enabled = false;
                 return;
             }
 
             // Seconds to ms
-            timer.Interval = Config.AutoSaveConfig.Delay.value * 1000;
-            timer.Enabled = Config.AutoSaveConfig.Enabled.value;
+            _timer.Interval = Config.AutoSaveConfig.Delay.value * 1000;
+            _timer.Enabled = Config.AutoSaveConfig.Enabled.value;
         }
         #endregion Initialization
 
         static void OnTimer(object sender, ElapsedEventArgs e)
         {
-            doUpdate = true;
+            _indPerformSave = true;
         }
 
         static void OnEditorUpdate()
         {
-            if (!doUpdate)
+            if (!_indPerformSave)
                 return;
 
             try
             {
+                UnityEngine.SceneManagement.Scene scene = EditorSceneManager.GetActiveScene();
+
+                if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating ||
+                    EditorSceneManager.IsPreviewScene(scene) || EditorSceneManager.IsReloading(scene))
+                    return;
+
                 AssetDatabase.SaveAssets();
-                bool saveOK = EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
-                Debug.Log("Saved Scene " + (saveOK ? "OK" : "Error!"));
+                bool saveOK = EditorSceneManager.SaveScene(scene);
+                Debug.Log($"Saved Scene {(saveOK ? "OK" : "Error!")}");
             }
             catch (Exception ex)
             {
                 Debug.LogException(ex);
             }
-
-            doUpdate = false;
+            finally
+            {
+                _indPerformSave = false;
+            }
         }
     }
 }

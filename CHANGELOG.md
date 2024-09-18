@@ -1,3 +1,6 @@
+# 1.0.16
+- Fix autosave trying to save during compilation/play/pause modes or while refreshing the asset database.
+
 # 1.0.15
 - Fix the object state toggle popping up a question
 - Wrap editor-only code in UnityEditor only preprocessor tags

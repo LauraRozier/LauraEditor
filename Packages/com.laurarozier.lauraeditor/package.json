@@ -2,7 +2,7 @@
   "name": "com.laurarozier.lauraeditor",
   "displayName": "LauraEditor",
   "description": "Editor modifications by LauraRozier, to make life easier. It overhauls the Hierarchy panel and adds named Editor-Only separators.",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "unity": "2019.4",
   "author": {
     "name": "LauraRozier",
